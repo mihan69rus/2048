@@ -1,0 +1,46 @@
+%include "kernel.2048"
+
+section .bss
+
+write	resb 10
+
+section .data
+
+spa 	db " "
+ent	db 10
+esc1	db 27,"["
+esc2	db ";"
+esc3	db "f"
+clrscr	db 27,"[2J"
+
+%macro ENTER 0
+	KERNEL 4,1,ent,1
+%endmacro
+
+%macro SPACE 0
+	KERNEL 4,1,spa,1
+%endmacro
+
+%macro EXIT 0
+	KERNEL 1,0
+%endmacro
+
+%macro GOTOXY 2
+	KERNEL 4,1,esc1,2
+	mov eax,%1
+	push write
+	call num_in_string
+	add esp,4
+	KERNEL 4,1,write,ecx
+	KERNEL 4,1,esc2,1
+	mov eax,%2
+	push write
+	call num_in_string
+	add esp,4
+	KERNEL 4,1,write,ecx
+	KERNEL 4,1,esc3,1
+%endmacro
+
+%macro CLEAR 0
+	KERNEL 4,1,clrscr,4
+%endmacro

@@ -1,0 +1,68 @@
+%macro	 KERNEL 1-*
+%ifdef OS_FREEBSD
+	%rep %0
+		%rotate -1
+			push dword %1
+	%endrep
+			mov eax,[esp]
+			int 80h
+			jnc %%not_error
+			mov ecx,eax
+			mov eax,-1
+			jmp short %%exit
+	%%not_error:	xor ecx,ecx
+	%%exit:		add esp,%0*4
+%elifdef OS_LINUX
+	%if %0>1
+			push ebx
+		%if %0>4
+			push esi
+			push edi
+		%endif
+	%endif
+	%rep %0
+		%rotate -1
+			push dword %1
+	%endrep
+			pop eax
+	%if %0>1
+			pop ebx
+	  %if %0>2
+			pop ecx
+	    %if %0>3
+			pop edx
+	      %if %0>4
+			pop esi
+	        %if %0>5
+			pop edi
+		  %if %0>6
+		    %error "Max number of parameters is 5 in Linux"
+		  %endif
+	        %endif
+	      %endif
+	    %endif
+	  %endif
+	%endif
+			int 80h
+			mov ecx,eax
+			and ecx,0fffff000h
+			cmp ecx,0fffff000h
+			jne %%not_error
+			mov ecx,eax
+			neg ecx
+			mov eax,-1
+			jmp short %%exit
+	%%not_error:	xor ecx,ecx
+	%%exit:
+	%if %0>1
+		%if %0>4
+			pop edi
+			pop esi
+		%endif
+			pop ebx
+	%endif
+%else
+%error You should choose the system: OS_FREEBSD or OS_LINUX
+%endif
+%endmacro
+
